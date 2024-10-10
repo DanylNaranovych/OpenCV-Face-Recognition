@@ -11,28 +11,18 @@ endif()
 
 project ("CMakeProject1")
 
-get_directory_property(has_parent PARENT_DIRECTORY)
-if(NOT has_parent)
-   set(DLIB_IN_PROJECT_BUILD false)
-endif()
-
-add_subdirectory(../dlib dlib_build)
-
-# set("dlib_DIR" "C:/Users/Danyl/Downloads/dlib/build/dlib/config")
-
 find_package(CUDA REQUIRED)
 find_package (OpenCV REQUIRED)
-# find_package (dlib REQUIRED)
 
 include_directories(${CUDA_INCLUDE_DIRS})
 include_directories (${OpenCV_INCLUDE_DIRS})
-# include_directories ("C:/Users/Danyl/Downloads/dlib/source")
+include_directories("D:/WorkProjects/tensorflow/include")
 
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_75")  # Здесь укажите архитектуру вашей видеокарты
 
 # Добавьте источник в исполняемый файл этого проекта.
 add_executable ("CMakeProject1" "CMakeProject1.cpp" "CMakeProject1.h")
-target_link_libraries ("CMakeProject1" ${OpenCV_LIBS} ${CUDA_LIBRARIES} dlib::dlib)
+target_link_libraries ("CMakeProject1" ${OpenCV_LIBS} ${CUDA_LIBRARIES} "D:/WorkProjects/tensorflow/lib")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET CMakeProject1 PROPERTY CXX_STANDARD 20)

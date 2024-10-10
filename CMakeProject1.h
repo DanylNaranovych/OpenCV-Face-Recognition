@@ -7,6 +7,6 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
-#include <dlib/image_processing/frontal_face_detector.h>
+#include <tensorflow/c/c_api.h>
 
 // TODO: установите здесь ссылки на дополнительные заголовки, требующиеся для программы.
