@@ -364,3 +364,9 @@ FodyWeavers.xsd
 
 # Folder with collected fames
 collectedPictures/
+
+# Folder with identified people
+identifiedPeople/
+
+# Folder with unidentified people
+unidentifiedPeople/
