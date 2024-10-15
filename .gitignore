@@ -370,3 +370,4 @@ identifiedPeople/
 
 # Folder with unidentified people
 unidentifiedPeople/
+*.db
