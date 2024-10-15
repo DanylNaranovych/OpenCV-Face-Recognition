@@ -18,11 +18,12 @@
 #include <dlib/string.h>
 #include <dlib/image_io.h>
 
-// Path to project and folders
+// Path to project, folders and db
 constexpr auto PROJECT_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/";
 constexpr auto COLLECTED_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/collectedPictures/";
 constexpr auto IDENTIFIED_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/identifiedPeople/";
 constexpr auto UNIDENTIFIED_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/unidentifiedPeople/";
+constexpr auto DB_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/records.db";
 
 using namespace dlib;
 using namespace std;
@@ -87,3 +88,15 @@ extern string lastPersonName;
 int getLastFrameNumber(const string& directoryPath, const string& patternPart);
 // Analyzing collected frames and making db notes
 void processCollectedPictures(frontal_face_detector& detector, shape_predictor& pose_model, anet_type& face_recognizer, int imgIndex);
+
+// Database interaction
+// Function for initializing a database
+void databaseInitialization();
+// Function for adding a new entry with name and entry time
+void addRecord(const std::string& name, int entryTime);
+// Function to update the output time for the last entry by name
+void addExitTimeToRecord(const std::string& name, int exitTime);
+// Function to check if a user has an unclosed record
+bool checkOpenRecord(const std::string& name);
+// Function to get the id of an open record
+int getIdOfOpenRecord(const std::string& name);

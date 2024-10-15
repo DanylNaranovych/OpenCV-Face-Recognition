@@ -15,6 +15,8 @@ int main() {
 	Timer timer;
 	short int counter = getLastFrameNumber(COLLECTED_DIR, "motion_detected_frame");
 
+	databaseInitialization();
+
 	frontal_face_detector detector = get_frontal_face_detector();
 	shape_predictor pose_model;
 	anet_type face_recognizer;

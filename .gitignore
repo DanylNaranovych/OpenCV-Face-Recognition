@@ -370,4 +370,6 @@ identifiedPeople/
 
 # Folder with unidentified people
 unidentifiedPeople/
+
+# Database files for sqlite3
 *.db
