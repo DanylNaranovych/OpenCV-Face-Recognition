@@ -6,6 +6,7 @@ string lastPersonName;
 
 int main() {
 	cv::cuda::setDevice(0);
+	//cv::VideoCapture cap("rtsp://admin:YT90W2!@190.120.1.21/Preview_01_sub");
 	cv::VideoCapture cap(0);
 	cv::Mat frame, prevFrame, diffFrame;
 	cv::cuda::GpuMat Gframe, GprevFrame, GdiffFrame;
@@ -17,8 +18,8 @@ int main() {
 	frontal_face_detector detector = get_frontal_face_detector();
 	shape_predictor pose_model;
 	anet_type face_recognizer;
-	deserialize(PROJECT_DIR + string("shape_predictor_68_face_landmarks.dat")) >> pose_model;
-	deserialize(PROJECT_DIR + string("dlib_face_recognition_resnet_model_v1.dat")) >> face_recognizer;
+	deserialize(PROJECT_DIR + string("models/shape_predictor_68_face_landmarks.dat")) >> pose_model;
+	deserialize(PROJECT_DIR + string("models/dlib_face_recognition_resnet_model_v1.dat")) >> face_recognizer;
 
 
 	// Check for a camera

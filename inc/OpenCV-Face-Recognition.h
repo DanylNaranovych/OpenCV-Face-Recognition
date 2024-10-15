@@ -1,12 +1,10 @@
-﻿// CMakeProject1.h : включаемый файл для стандартных системных включаемых файлов
-// или включаемые файлы для конкретного проекта.
-
-#pragma once
+﻿#pragma once
 
 #include <iostream>
 #include <filesystem>
 #include <regex>
 #include <chrono>
+#include <sqlite_modern_cpp.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>

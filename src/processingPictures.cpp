@@ -7,6 +7,7 @@ void processCollectedPictures(frontal_face_detector& detector, shape_predictor& 
 	string filePath = COLLECTED_DIR + string("motion_detected_frame_" + to_string(imgIndex) + ".jpg");
 	cv::Mat img = cv::imread(filePath);
 	cv::Mat knownImg;
+	matrix<rgb_pixel> face_chip;
 
 	if (img.empty()) return;
 
@@ -17,54 +18,56 @@ void processCollectedPictures(frontal_face_detector& detector, shape_predictor& 
 	if (!faces.empty()) {
 		personName = "unknownPerson";
 
-		// Retrieve the descriptor for the face in the current image
-		matrix<rgb_pixel> face_chip;
-		full_object_detection shape = pose_model(cimg, faces[0]);
-		extract_image_chip(cimg, get_face_chip_details(shape, 150, 0.25), face_chip);
-		matrix<float, 0, 1> faceDescriptor = face_recognizer(face_chip);
+		// Loop through all faces in the frame
+		for (const auto& face : faces) {
+			// Retrieve the descriptor for the face in the current image
+			full_object_detection shape = pose_model(cimg, face);
+			extract_image_chip(cimg, get_face_chip_details(shape, 150, 0.25), face_chip);
+			matrix<float, 0, 1> faceDescriptor = face_recognizer(face_chip);
 
-		//Check if the current face matches the previously recognized face
-		if (!lastPersonName.empty()) {
-			double distance = length(faceDescriptor - lastFaceDescriptor);
-			if (distance < 0.6) { // Threshold for identifying similar individuals
-				cout << "The same person detected: " << lastPersonName << endl;
-				personName = lastPersonName;
-				knownPerson = true;
-			}
-		}
-
-		// If the person has not been identified in the past condition,
-		// then we start identification relative to all known people
-		if (!knownPerson) {
-			// Search the folder of identified people
-			for (const auto& personEntry : fs::directory_iterator(IDENTIFIED_DIR)) {
-				identifiedPersonName = personEntry.path().filename().string();
-				identifiedPersonNameSize = identifiedPersonName.size();
-				if (identifiedPersonName.substr(identifiedPersonNameSize - 4) != ".jpg")  continue;
-
-				knownImg = cv::imread(IDENTIFIED_DIR + identifiedPersonName);
-
-				identifiedPersonName.erase(identifiedPersonNameSize - 4);
-
-				cv_image<bgr_pixel> knownCimg(knownImg);
-				std::vector<rectangle> knownFaces = detector(knownCimg);
-
-				if (!knownFaces.empty()) {
-					full_object_detection knownShape = pose_model(knownCimg, knownFaces[0]);
-					extract_image_chip(knownCimg, get_face_chip_details(knownShape, 150, 0.25), face_chip);
-					matrix<float, 0, 1> knownFaceDescriptor = face_recognizer(face_chip);
-
-					// Comparing face descriptors using Euclidean distance
-					double distance = length(faceDescriptor - knownFaceDescriptor);
-					if (distance < 0.6) { // Threshold for identifying similar individuals
-						knownPerson = true;
-						personName = identifiedPersonName;
-						lastFaceDescriptor = knownFaceDescriptor; // Сохраняем последний дескриптор
-						lastPersonName = personName; // Сохраняем имя последнего человека
-						break;
-					}
+			//Check if the current face matches the previously recognized face
+			if (!lastPersonName.empty()) {
+				double distance = length(faceDescriptor - lastFaceDescriptor);
+				if (distance < 0.6) { // Threshold for identifying similar individuals
+					cout << "The same person detected: " << lastPersonName << endl;
+					personName = lastPersonName;
+					knownPerson = true;
 				}
-				if (knownPerson) break;
+			}
+
+			// If the person has not been identified in the past condition,
+			// then we start identification relative to all known people
+			if (!knownPerson) {
+				// Search the folder of identified people
+				for (const auto& personEntry : fs::directory_iterator(IDENTIFIED_DIR)) {
+					identifiedPersonName = personEntry.path().filename().string();
+					identifiedPersonNameSize = identifiedPersonName.size();
+					if (identifiedPersonName.substr(identifiedPersonNameSize - 4) != ".jpg")  continue;
+
+					knownImg = cv::imread(IDENTIFIED_DIR + identifiedPersonName);
+
+					identifiedPersonName.erase(identifiedPersonNameSize - 4);
+
+					cv_image<bgr_pixel> knownCimg(knownImg);
+					std::vector<rectangle> knownFaces = detector(knownCimg);
+
+					if (!knownFaces.empty()) {
+						full_object_detection knownShape = pose_model(knownCimg, knownFaces[0]);
+						extract_image_chip(knownCimg, get_face_chip_details(knownShape, 150, 0.25), face_chip);
+						matrix<float, 0, 1> knownFaceDescriptor = face_recognizer(face_chip);
+
+						// Comparing face descriptors using Euclidean distance
+						double distance = length(faceDescriptor - knownFaceDescriptor);
+						if (distance < 0.6) { // Threshold for identifying similar individuals
+							knownPerson = true;
+							personName = identifiedPersonName;
+							lastFaceDescriptor = knownFaceDescriptor; // Сохраняем последний дескриптор
+							lastPersonName = personName; // Сохраняем имя последнего человека
+							break;
+						}
+					}
+					if (knownPerson) break;
+				}
 			}
 		}
 
