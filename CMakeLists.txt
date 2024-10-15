@@ -10,13 +10,15 @@ if (POLICY CMP0141)
 endif ()
 
 set (CMAKE_TOOLCHAIN_FILE "D:/vcpkg/scripts/buildsystems/vcpkg.cmake")
-set (OpenCV_DIR "${VCPKG_INSTALLED_DIR}/x64-windows/share/opencv4")
+# set (OpenCV_DIR "${VCPKG_INSTALLED_DIR}/x64-windows/share/opencv4")
 
 project ("OpenCV-Face-Recognition")
 
 find_package (CUDA REQUIRED)
 find_package (OpenCV REQUIRED)
 find_package (dlib CONFIG REQUIRED)
+
+set (DLIB_USE_CUDA True)
 
 include_directories (${CUDA_INCLUDE_DIRS})
 include_directories (${OpenCV_INCLUDE_DIRS})
@@ -25,8 +27,14 @@ link_directories (${DLIB_LIBRARY_DIRS})
 
 set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_75")  # Здесь укажите архитектуру вашей видеокарты
 
+# Поиск всех исходных файлов в папке src
+file(GLOB_RECURSE SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
+
+# Поиск всех заголовочных файлов в папке inc (опционально, если нужно указать заголовочные файлы)
+file(GLOB_RECURSE HEADER_FILES ${CMAKE_SOURCE_DIR}/inc/*.h)
+
 # Добавьте источник в исполняемый файл этого проекта.
-add_executable ("OpenCV-Face-Recognition" "OpenCV-Face-Recognition.cpp" "OpenCV-Face-Recognition.h")
+add_executable ("OpenCV-Face-Recognition" ${HEADER_FILES} ${SRC_FILES})
 target_link_libraries ("OpenCV-Face-Recognition" PRIVATE ${OpenCV_LIBS} ${CUDA_LIBRARIES} dlib::dlib)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

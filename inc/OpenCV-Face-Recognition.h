@@ -59,4 +59,33 @@ using anet_type = loss_metric<fc_no_bias<128, avg_pool_everything<
 	input_rgb_image_sized<150>
 	>>>>>>>>>>>>;
 
-// TODO: установите здесь ссылки на дополнительные заголовки, требующиеся для программы.
+// Timer. It is necessary for counting down five seconds from the moment
+// of saving the last frame before starting the processing of saved photos
+class Timer {
+public:
+	Timer() : startTime(chrono::steady_clock::now()) {}
+
+	// Timer reset
+	void reset() {
+		startTime = chrono::steady_clock::now();
+	}
+
+	// Returns the time in seconds since the last reset or startup
+	double elapsed() const {
+		auto currentTime = chrono::steady_clock::now();
+		chrono::duration<double> elapsedTime = currentTime - startTime;
+		return elapsedTime.count();
+	}
+
+private:
+	chrono::steady_clock::time_point startTime;
+};
+
+// Global variables for storing the previous descriptor and name
+extern matrix<float, 0, 1> lastFaceDescriptor;
+extern string lastPersonName;
+
+// Getting last frame index in folder
+int getLastFrameNumber(const string& directoryPath, const string& patternPart);
+// Analyzing collected frames and making db notes
+void processCollectedPictures(frontal_face_detector& detector, shape_predictor& pose_model, anet_type& face_recognizer, int imgIndex);
