@@ -70,8 +70,6 @@ void processCollectedPictures() {
 			continue;
 		}
 
-		cout << "processingPictures: 1" << endl;
-
 		img = cv::imread(filePath);
 
 		if (img.empty()) {
@@ -79,61 +77,35 @@ void processCollectedPictures() {
 			continue;
 		}
 
-		cout << "processingPictures: 2" << endl;
-
 		cv_image<bgr_pixel> cimg(img);
 		std::vector<rectangle> faces = detector(cimg);
 
-		cout << "processingPictures: 3" << endl;
-
 		// Checking the presence of faces on the frame
 		if (!faces.empty()) {
-			personName = "unknownPerson";
-
-			cout << "processingPictures: 4" << endl;
-
 			// Loop through all faces in the frame
 			for (const auto& face : faces) {
-
-				cout << "processingPictures: 5" << endl;
+				personName = "unknownPerson";
 
 				// Retrieve the descriptor for the face in the current image
 				full_object_detection shape = pose_model(cimg, face);
-				cout << "processingPictures: 5.0.1" << endl;
-
 				extract_image_chip(cimg, get_face_chip_details(shape, 150, 0.25), face_chip);
-
-				cout << "processingPictures: 5.0.2" << endl;
-
 				matrix<float, 0, 1> faceDescriptor = face_recognizer(face_chip);
-
-				cout << "processingPictures: 5.1" << endl;
 
 				//Check if the current face matches the previously recognized face
 				if (!lastPersonName.empty()) {
-
-					cout << "processingPictures: 5.2" << endl;
-
 					double distance = length(faceDescriptor - lastFaceDescriptor);
+
 					// Threshold for identifying similar individuals
 					if (distance < 0.6) {
-
-						cout << "processingPictures: 5.3" << endl;
-
 						cout << "The same person detected: " << lastPersonName << endl;
 						personName = lastPersonName;
 						knownPerson = true;
 					}
 				}
 
-				cout << "processingPictures: 6" << endl;
-
 				// If the person has not been identified in the past condition,
 				// then we start identification relative to all known people
 				if (!knownPerson) {
-
-					cout << "processingPictures: 7" << endl;
-
 					// Search the folder of identified people
 					for (const auto& personEntry : fs::directory_iterator(IDENTIFIED_DIR)) {
 						identifiedPersonName = personEntry.path().filename().string();
@@ -166,19 +138,35 @@ void processCollectedPictures() {
 						if (knownPerson) break;
 					}
 				}
-			}
+				if (knownPerson) {
+					isEntry ? addRecord(personName, getFileCreationTime(filePath)) : addExitTimeToRecord(personName, getFileCreationTime(filePath));
 
-			if (knownPerson) {
-				isEntry ? addRecord(personName, getFileCreationTime(filePath)) : addExitTimeToRecord(personName, getFileCreationTime(filePath));
+					cout << "The person is identified, photo deletion at path: " << filePath << endl;
+					fs::remove(filePath);
+				}
+				else {
+					index = getLastFrameNumber(UNIDENTIFIED_DIR, personName);
+					string destination = UNIDENTIFIED_DIR + personName + "_" + to_string(++index) + ".jpg";
 
-				cout << "The person is identified, photo deletion at path: " << filePath << endl;
-				fs::remove(filePath);
-			}
-			else {
-				index = getLastFrameNumber(UNIDENTIFIED_DIR, personName);
-				string destination = UNIDENTIFIED_DIR + personName + "_" + to_string(++index) + ".jpg";
-				cout << "The person is unidentified, preservation in: " << destination << endl;
-				fs::rename(filePath, destination);
+					// The enlargement of the rectangle around the face
+					int paddingX = static_cast<int>(face.width() * 0.2);  // 20% from the width of the face
+					int paddingY = static_cast<int>(face.height() * 0.2); // 20% from the height of the face
+
+					// Coordinates and dimensions of the rectangle taking into account the image boundaries
+					int x = std::max(0, static_cast<int>(face.left()) - paddingX);
+					int y = std::max(0, static_cast<int>(face.top()) - paddingY);
+					int width = std::min(static_cast<int>(face.width() + 2 * paddingX), img.cols - x);
+					int height = std::min(static_cast<int>(face.height() + 2 * paddingY), img.rows - y);
+
+					cv::Rect expandedFaceRect(x, y, width, height);
+					cv::Mat croppedFace = img(expandedFaceRect).clone();
+
+					// Saving a cropped face image
+					cv::imwrite(destination, croppedFace);
+					cout << "The person is unidentified, cropped face saved in: " << destination << endl;
+
+					fs::remove(filePath);
+				}
 			}
 		}
 		else {

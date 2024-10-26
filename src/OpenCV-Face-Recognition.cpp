@@ -38,7 +38,7 @@ void setPaths() {
 void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry: true - entry camera, false - exit camera
 	//cv::VideoCapture cap(cameraUrl, cv::CAP_FFMPEG);
 	cv::VideoCapture cap(0);
-	cv::Mat frame, prevFrame, diffFrame, grayFrame;
+	cv::Mat frame, croppedFrame, prevFrame, diffFrame, grayFrame;
 	string filename, filenamePart, cameraType;
 
 	filenamePart = isEntry ? "motion_detected_frame_entry" : "motion_detected_frame_exit";
@@ -53,12 +53,21 @@ void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry:
 
 	// Capture the first frame
 	cap >> frame;
-	cv::cvtColor(frame, prevFrame, cv::COLOR_BGR2GRAY);
+
+	// Crop the left third of the frame
+	cv::Rect cropRect(frame.cols / 3, 0, frame.cols * 2 / 3, frame.rows);
+	croppedFrame = frame(cropRect);
+
+	cv::cvtColor(croppedFrame, prevFrame, cv::COLOR_BGR2GRAY);
 
 	// Basic processing cycle
 	while (true) {
 		cap >> frame;
 		cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY);
+
+		// Crop the left third of the frame
+		croppedFrame = frame(cropRect);
+		cv::cvtColor(croppedFrame, grayFrame, cv::COLOR_BGR2GRAY);
 
 		// Compute the absolute difference between the current frame and the previous frame
 		cv::absdiff(grayFrame, prevFrame, diffFrame);
@@ -67,14 +76,14 @@ void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry:
 		cv::threshold(diffFrame, diffFrame, 70, 255, cv::THRESH_BINARY);
 
 		// Display the result
-		cv::imshow("Camera: " + cameraType, frame);
+		cv::imshow("Camera: " + cameraType, croppedFrame);
 
 		// Check if there is any motion
 		if (cv::countNonZero(diffFrame) > 0) {
 			// Save the original frame to disk
 			counter = getLastFrameNumber(COLLECTED_DIR, filenamePart);
 			filename = COLLECTED_DIR + filenamePart + "_" + to_string(++counter) + ".jpg";
-			cv::imwrite(filename, frame);
+			cv::imwrite(filename, croppedFrame);
 			cout << "Motion detected! Frame saved to " << filename << endl;
 		}
 
