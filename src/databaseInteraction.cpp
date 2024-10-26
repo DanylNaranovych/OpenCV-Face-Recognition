@@ -9,15 +9,15 @@ void databaseInitialization() {
 		db << "CREATE TABLE IF NOT EXISTS attendance ("
 			"id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			"name TEXT, "
-			"entryTime INTEGER, "
-			"exitTime INTEGER);";
+			"entryTime TEXT, "
+			"exitTime TEXT);";
 	}
 	catch (sqlite::sqlite_exception& e) {
 		cerr << "SQLite error: " << e.what() << endl;
 	}
 }
 
-void addRecord(const string& name, int entryTime) {
+void addRecord(const string& name, const string& entryTime) {
 	try {
 		sqlite::database db(DB_DIR);
 
@@ -33,11 +33,13 @@ void addRecord(const string& name, int entryTime) {
 	}
 }
 
-void addExitTimeToRecord(const string& name, int exitTime) {
+void addExitTimeToRecord(const string& name, const string& exitTime) {
 	try {
 		sqlite::database db(DB_DIR);
 
 		int recordId = getIdOfOpenRecord(name);
+
+		if (recordId < 0) return;
 
 		// Update the last record with the passed name, which has not yet filled in the exitTime fieldÌî
 		db << "UPDATE attendance SET exitTime = ? WHERE id = ?;"

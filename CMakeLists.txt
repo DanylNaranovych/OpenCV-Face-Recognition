@@ -9,7 +9,8 @@ if (POLICY CMP0141)
   set (CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif ()
 
-set (CMAKE_TOOLCHAIN_FILE "D:/vcpkg/scripts/buildsystems/vcpkg.cmake")
+set (CMAKE_TOOLCHAIN_FILE "D:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+set (OpenCV_DIR "${VCPKG_INSTALLED_DIR}/x64-windows/share/opencv4")
 
 project ("OpenCV-Face-Recognition")
 
@@ -19,7 +20,7 @@ find_package (dlib CONFIG REQUIRED)
 
 find_path(SQLITE_MODERN_CPP_INCLUDE_DIRS "sqlite_modern_cpp.h")
 
-set (DLIB_USE_CUDA True)
+# set (DLIB_USE_CUDA True)
 
 include_directories (${CUDA_INCLUDE_DIRS})
 include_directories (${OpenCV_INCLUDE_DIRS})
@@ -36,7 +37,7 @@ file(GLOB_RECURSE HEADER_FILES ${CMAKE_SOURCE_DIR}/inc/*.h)
 
 # Добавьте источник в исполняемый файл этого проекта.
 add_executable ("OpenCV-Face-Recognition" ${HEADER_FILES} ${SRC_FILES})
-target_link_libraries ("OpenCV-Face-Recognition" PRIVATE ${OpenCV_LIBS} ${CUDA_LIBRARIES} dlib::dlib ${SQLITE_MODERN_CPP_INCLUDE_DIRS})
+target_link_libraries ("OpenCV-Face-Recognition" PRIVATE ${CUDA_LIBS} ${OpenCV_LIBS} dlib::dlib ${SQLITE_MODERN_CPP_INCLUDE_DIRS})
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property (TARGET OpenCV-Face-Recognition PROPERTY CXX_STANDARD 20)

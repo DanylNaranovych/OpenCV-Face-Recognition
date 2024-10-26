@@ -1,11 +1,16 @@
 ﻿#pragma once
 
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <filesystem>
 #include <regex>
 #include <chrono>
+#include <thread>
 #include <sqlite_modern_cpp.h>
+#include <cuda_runtime.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/cuda.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
 #include <dlib/opencv/cv_image.h>
@@ -18,16 +23,16 @@
 #include <dlib/string.h>
 #include <dlib/image_io.h>
 
-// Path to project, folders and db
-constexpr auto PROJECT_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/";
-constexpr auto COLLECTED_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/collectedPictures/";
-constexpr auto IDENTIFIED_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/identifiedPeople/";
-constexpr auto UNIDENTIFIED_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/unidentifiedPeople/";
-constexpr auto DB_DIR = "D:/WorkProjects/OpenCV-Face-Recognition/records.db";
-
 using namespace dlib;
 using namespace std;
 namespace fs = std::filesystem;
+
+// Path to project, folders and db
+extern string PROJECT_DIR, COLLECTED_DIR, IDENTIFIED_DIR, UNIDENTIFIED_DIR, DB_DIR;
+
+// Global variables for storing the previous descriptor and name
+extern matrix<float, 0, 1> lastFaceDescriptor;
+extern string lastPersonName;
 
 // Definition of a Dlib neural network
 template <template <int, template<typename>class, int, typename> class block, int N, template<typename>class BN, typename SUBNET>
@@ -80,22 +85,18 @@ private:
 	chrono::steady_clock::time_point startTime;
 };
 
-// Global variables for storing the previous descriptor and name
-extern matrix<float, 0, 1> lastFaceDescriptor;
-extern string lastPersonName;
-
 // Getting last frame index in folder
 int getLastFrameNumber(const string& directoryPath, const string& patternPart);
 // Analyzing collected frames and making db notes
-void processCollectedPictures(frontal_face_detector& detector, shape_predictor& pose_model, anet_type& face_recognizer, int imgIndex);
+void processCollectedPictures();
 
 // Database interaction
 // Function for initializing a database
 void databaseInitialization();
 // Function for adding a new entry with name and entry time
-void addRecord(const std::string& name, int entryTime);
+void addRecord(const std::string& name, const string& entryTime);
 // Function to update the output time for the last entry by name
-void addExitTimeToRecord(const std::string& name, int exitTime);
+void addExitTimeToRecord(const std::string& name, const string& exitTime);
 // Function to check if a user has an unclosed record
 bool checkOpenRecord(const std::string& name);
 // Function to get the id of an open record
