@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <filesystem>
 #include <regex>
 #include <chrono>
@@ -89,6 +90,9 @@ private:
 int getLastFrameNumber(const string& directoryPath, const string& patternPart);
 // Analyzing collected frames and making db notes
 void processCollectedPictures();
+
+// Function for wriring logs
+void addLog(const string& text);
 
 // Database interaction
 // Function for initializing a database

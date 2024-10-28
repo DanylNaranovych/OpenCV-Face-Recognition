@@ -1,22 +1,22 @@
 #include "../inc/OpenCV-Face-Recognition.h"
 
-std::string getFileCreationTime(const std::string& filePath) {
-	// Получаем время последнего изменения файла
+std::string getFileCreationTime(const string& filePath) {
+	// Get the time of the last modification of the file
 	auto ftime = fs::last_write_time(filePath);
 
-	// Преобразуем file_time_type в system_clock::time_point
+	// Convert file_time_type to system_clock::time_point
 	auto sctp = std::chrono::time_point_cast<std::chrono::system_clock::duration>(
 		ftime - decltype(ftime)::clock::now() + std::chrono::system_clock::now()
 	);
 
-	// Преобразуем в time_t
+	// Convert to time_t
 	std::time_t ctime = std::chrono::system_clock::to_time_t(sctp);
 
-	// Преобразуем в строку с помощью stringstream
+	// Convert to a string using stringstream
 	std::stringstream ss;
 	ss << std::put_time(std::localtime(&ctime), "%Y-%m-%d %H:%M:%S");
 
-	// Возвращаем строковое представление времени
+	// Return a string representation of the time
 	return ss.str();
 }
 
@@ -74,6 +74,7 @@ void processCollectedPictures() {
 
 		if (img.empty()) {
 			cout << "File is empty or unreachable: " << filePath << endl;
+			addLog("File is empty or unreachable: " + filePath);
 			continue;
 		}
 
@@ -142,7 +143,6 @@ void processCollectedPictures() {
 					isEntry ? addRecord(personName, getFileCreationTime(filePath)) : addExitTimeToRecord(personName, getFileCreationTime(filePath));
 
 					cout << "The person is identified, photo deletion at path: " << filePath << endl;
-					fs::remove(filePath);
 				}
 				else {
 					index = getLastFrameNumber(UNIDENTIFIED_DIR, personName);
@@ -164,14 +164,13 @@ void processCollectedPictures() {
 					// Saving a cropped face image
 					cv::imwrite(destination, croppedFace);
 					cout << "The person is unidentified, cropped face saved in: " << destination << endl;
-
-					fs::remove(filePath);
 				}
 			}
 		}
 		else {
 			cout << "No faces detected in the file: " << filePath << endl;
-			fs::remove(filePath);
 		}
+
+		fs::remove(filePath);
 	}
 }

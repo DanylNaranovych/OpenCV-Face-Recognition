@@ -31,6 +31,7 @@ void setPaths() {
 	}
 	else {
 		cerr << "Error getting the current path." << endl;
+		addLog("Error getting the current path.");
 	}
 }
 
@@ -48,14 +49,17 @@ void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry:
 	// Check for a camera
 	if (!cap.isOpened()) {
 		cout << "No camera " << cameraType << " exist" << endl;
+		addLog("No camera " + cameraType + " exist");
 		return;
 	}
 
 	// Capture the first frame
 	cap >> frame;
 
-	// Crop the left third of the frame
-	cv::Rect cropRect(frame.cols / 3, 0, frame.cols * 2 / 3, frame.rows);
+	int topCrop = frame.rows / 10; // 10% of frame height
+
+	// Crop the frame
+	cv::Rect cropRect(frame.cols / 3, topCrop, frame.cols * 2 / 3, frame.rows - topCrop);
 	croppedFrame = frame(cropRect);
 
 	cv::cvtColor(croppedFrame, prevFrame, cv::COLOR_BGR2GRAY);
