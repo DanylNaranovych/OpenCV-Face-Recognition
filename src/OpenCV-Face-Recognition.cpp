@@ -31,14 +31,34 @@ void setPaths() {
 	}
 	else {
 		cerr << "Error getting the current path." << endl;
-		addLog("Error getting the current path.");
+		addLog("Error getting the current path.\n");
 	}
 }
 
+Config loadConfig(const std::string& filename) {
+	std::ifstream file(PROJECT_DIR + filename);
+	if (!file.is_open()) {
+		throw std::runtime_error("Could not open config file.");
+		addLog("Could not open config file.\n");
+	}
+
+	json configJson;
+	file >> configJson;
+
+	Config config;
+	config.firstCameraMainStream = configJson.value("first_camera_main_stream", "error");      // значение по умолчанию
+	config.firstCameraSubStream = configJson.value("first_camera_sub_stream", "error");    // значение по умолчанию
+	config.secondCameraMainStream = configJson.value("second_camera_main_stream", "error"); // значение по умолчанию
+	config.secondCameraSubStream = configJson.value("second_camera_sub_stream", "error"); // значение по умолчанию
+
+	return config;
+}
+
+
 // Function for a thread that captures frames from a single camera
 void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry: true - entry camera, false - exit camera
-	//cv::VideoCapture cap(cameraUrl, cv::CAP_FFMPEG);
-	cv::VideoCapture cap(0);
+	cv::VideoCapture cap(cameraUrl, cv::CAP_FFMPEG);
+	//cv::VideoCapture cap(0);
 	cv::Mat frame, croppedFrame, prevFrame, diffFrame, grayFrame;
 	string filename, filenamePart, cameraType;
 
@@ -48,8 +68,8 @@ void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry:
 
 	// Check for a camera
 	if (!cap.isOpened()) {
-		cout << "No camera " << cameraType << " exist" << endl;
-		addLog("No camera " + cameraType + " exist");
+		cerr << "No " << cameraType << " camera for capture exist" << endl;
+		addLog("No " + cameraType + " camera for capture exist.\n");
 		return;
 	}
 
@@ -80,7 +100,7 @@ void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry:
 		cv::threshold(diffFrame, diffFrame, 70, 255, cv::THRESH_BINARY);
 
 		// Display the result
-		cv::imshow("Camera: " + cameraType, croppedFrame);
+		//cv::imshow("Camera: " + cameraType, croppedFrame);
 
 		// Check if there is any motion
 		if (cv::countNonZero(diffFrame) > 0) {
@@ -88,15 +108,46 @@ void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry:
 			counter = getLastFrameNumber(COLLECTED_DIR, filenamePart);
 			filename = COLLECTED_DIR + filenamePart + "_" + to_string(++counter) + ".jpg";
 			cv::imwrite(filename, croppedFrame);
-			cout << "Motion detected! Frame saved to " << filename << endl;
 		}
 
 		// Update the previous frame
 		grayFrame.copyTo(prevFrame);
 
 		// Press esc to close the program
+		if (GetAsyncKeyState(VK_ESCAPE)) {
+			cerr << "End " << cameraType << " camera loop for capture" << endl;
+			return;
+		}
+	}
+}
+
+// Function for a thread that captures frames from a single camera
+void displayFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry: true - entry camera, false - exit camera
+	cv::VideoCapture cap(cameraUrl, cv::CAP_FFMPEG);
+	//cv::VideoCapture cap(0);
+	cv::Mat frame;
+	string cameraType;
+
+	cameraType = isEntry ? "entry" : "exit";
+
+	// Check for a camera
+	if (!cap.isOpened()) {
+		cerr << "No " << cameraType << " camera for display exist" << endl;
+		addLog("No " + cameraType + " camera for display exist.\n");
+		return;
+	}
+
+	// Basic processing cycle
+	while (true) {
+		cap >> frame;
+
+		// Display the result
+		cv::imshow("Camera: " + cameraType, frame);
+
+		// Press esc to close the program
 		if (cv::waitKey(1) == 27) {
-			cout << "End " << cameraType << " camera loop" << endl;
+			cerr << "End " << cameraType << " camera loop for display" << endl;
+			addLog("End " + cameraType + " camera loop for display.\n");
 			return;
 		}
 	}
@@ -108,16 +159,22 @@ int main() {
 	setPaths();
 	databaseInitialization();
 
+	Config config = loadConfig("config.json");
+
 	// Creating two threads for each camera
-	thread camera1Thread(captureFromCamera, "rtsp://admin:YT1771Q1@192.168.1.131/Preview_01_main", true);	// entry camera
-	//thread camera2Thread(captureFromCamera, "rtsp://admin:YT1771Q1@192.168.1.115/Preview_01_main", false);	// exit camera
+	thread camera1Thread(captureFromCamera, config.firstCameraMainStream, true);		// entry camera
+	thread camera1DisplayThread(displayFromCamera, config.firstCameraSubStream, true);
+	thread camera2Thread(captureFromCamera, config.secondCameraMainStream, false);		// exit camera
+	thread camera2DisplayThread(displayFromCamera, config.secondCameraSubStream, false);
 
 	// Creating thread for processing collected frames
 	thread processingFramesThread(processCollectedPictures);
 
 	// Waiting for threads to complete
 	camera1Thread.join();
-	//camera2Thread.join();
+	camera1DisplayThread.join();
+	camera2Thread.join();
+	camera2DisplayThread.join();
 	processingFramesThread.join();
 
 	return 0;

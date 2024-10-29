@@ -23,9 +23,11 @@
 #include <dlib/clustering.h>
 #include <dlib/string.h>
 #include <dlib/image_io.h>
+#include <nlohmann/json.hpp>
 
 using namespace dlib;
 using namespace std;
+using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 // Path to project, folders and db
@@ -63,6 +65,13 @@ using anet_type = loss_metric<fc_no_bias<128, avg_pool_everything<
 	max_pool<3, 3, 2, 2, relu<affine<con<32, 7, 7, 2, 2,
 	input_rgb_image_sized<150>
 	>>>>>>>>>>>>;
+
+struct Config {
+	string firstCameraMainStream;
+	string firstCameraSubStream;
+	string secondCameraMainStream;
+	string secondCameraSubStream;
+};
 
 // Timer. It is necessary for counting down five seconds from the moment
 // of saving the last frame before starting the processing of saved photos

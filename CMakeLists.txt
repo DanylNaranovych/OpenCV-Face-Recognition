@@ -17,6 +17,7 @@ project ("OpenCV-Face-Recognition")
 find_package (CUDA REQUIRED)
 find_package (OpenCV REQUIRED)
 find_package (dlib CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 find_path(SQLITE_MODERN_CPP_INCLUDE_DIRS "sqlite_modern_cpp.h")
 
@@ -37,7 +38,7 @@ file(GLOB_RECURSE HEADER_FILES ${CMAKE_SOURCE_DIR}/inc/*.h)
 
 # Добавьте источник в исполняемый файл этого проекта.
 add_executable ("OpenCV-Face-Recognition" ${HEADER_FILES} ${SRC_FILES})
-target_link_libraries ("OpenCV-Face-Recognition" PRIVATE ${CUDA_LIBS} ${OpenCV_LIBS} dlib::dlib ${SQLITE_MODERN_CPP_INCLUDE_DIRS})
+target_link_libraries ("OpenCV-Face-Recognition" PRIVATE ${CUDA_LIBS} ${OpenCV_LIBS} dlib::dlib ${SQLITE_MODERN_CPP_INCLUDE_DIRS} nlohmann_json::nlohmann_json)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property (TARGET OpenCV-Face-Recognition PROPERTY CXX_STANDARD 20)

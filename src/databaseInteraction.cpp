@@ -26,7 +26,6 @@ void addRecord(const string& name, const string& entryTime) {
 		// Add a new entry with name and entry time
 		db << "INSERT INTO attendance (name, entryTime) VALUES (?, ?);"
 			<< name << entryTime;
-		cout << "Record added: " << name << " came in at " << entryTime << endl;
 	}
 	catch (sqlite::sqlite_exception& e) {
 		cerr << "Error when adding a record: " << e.what() << endl;
@@ -44,7 +43,6 @@ void addExitTimeToRecord(const string& name, const string& exitTime) {
 		// Update the last record with the passed name, which has not yet filled in the exitTime fieldÌî
 		db << "UPDATE attendance SET exitTime = ? WHERE id = ?;"
 			<< exitTime << recordId;
-		cout << "Exit time updated for " << name << ": " << exitTime << endl;
 	}
 	catch (sqlite::sqlite_exception& e) {
 		cerr << "Error when updating the exit time: " << e.what() << endl;
@@ -61,7 +59,6 @@ bool checkOpenRecord(const string& name) {
 		db << "SELECT EXISTS(SELECT 1 FROM attendance WHERE name = ? AND exitTime IS NULL LIMIT 1);"
 			<< name
 			>> exists;  // Assign the result to the "exists" variable (0 - no, 1 - yes)
-
 	}
 	catch (sqlite::sqlite_exception& e) {
 		cerr << "Error during record verification: " << e.what() << endl;
@@ -80,11 +77,9 @@ int getIdOfOpenRecord(const std::string& name) {
 		db << "SELECT id FROM attendance WHERE name = ? AND exitTime IS NULL ORDER BY id DESC;"
 			<< name
 			>> id;
-
-		std::cout << "Get the id of an open record for: " << name << "; id: " << id << std::endl;
 	}
 	catch (sqlite::sqlite_exception& e) {
-		std::cerr << "Error when getting the id of an open record: " << e.what() << std::endl;
+		cerr << "Error when getting the id of an open record: " << e.what() << std::endl;
 	}
 
 	return id;

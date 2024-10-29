@@ -34,8 +34,6 @@ void processCollectedPictures() {
 	anet_type face_recognizer;
 	string pose_model_path = PROJECT_DIR + "models/shape_predictor_68_face_landmarks.dat";
 	string face_recognizer_path = PROJECT_DIR + "models/dlib_face_recognition_resnet_model_v1.dat";
-	cout << pose_model_path << endl;
-	cout << face_recognizer_path << endl;
 	deserialize(pose_model_path) >> pose_model;
 	deserialize(face_recognizer_path) >> face_recognizer;
 
@@ -73,8 +71,8 @@ void processCollectedPictures() {
 		img = cv::imread(filePath);
 
 		if (img.empty()) {
-			cout << "File is empty or unreachable: " << filePath << endl;
-			addLog("File is empty or unreachable: " + filePath);
+			cerr << "File is empty or unreachable: " << filePath << endl;
+			addLog("File is empty or unreachable: " + filePath + "\n");
 			continue;
 		}
 
@@ -98,7 +96,6 @@ void processCollectedPictures() {
 
 					// Threshold for identifying similar individuals
 					if (distance < 0.6) {
-						cout << "The same person detected: " << lastPersonName << endl;
 						personName = lastPersonName;
 						knownPerson = true;
 					}
@@ -141,8 +138,6 @@ void processCollectedPictures() {
 				}
 				if (knownPerson) {
 					isEntry ? addRecord(personName, getFileCreationTime(filePath)) : addExitTimeToRecord(personName, getFileCreationTime(filePath));
-
-					cout << "The person is identified, photo deletion at path: " << filePath << endl;
 				}
 				else {
 					index = getLastFrameNumber(UNIDENTIFIED_DIR, personName);
@@ -163,12 +158,8 @@ void processCollectedPictures() {
 
 					// Saving a cropped face image
 					cv::imwrite(destination, croppedFace);
-					cout << "The person is unidentified, cropped face saved in: " << destination << endl;
 				}
 			}
-		}
-		else {
-			cout << "No faces detected in the file: " << filePath << endl;
 		}
 
 		fs::remove(filePath);
