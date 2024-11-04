@@ -46,17 +46,19 @@ Config loadConfig(const std::string& filename) {
 	file >> configJson;
 
 	Config config;
-	config.firstCameraMainStream = configJson.value("first_camera_main_stream", "error");      // значение по умолчанию
-	config.firstCameraSubStream = configJson.value("first_camera_sub_stream", "error");    // значение по умолчанию
-	config.secondCameraMainStream = configJson.value("second_camera_main_stream", "error"); // значение по умолчанию
-	config.secondCameraSubStream = configJson.value("second_camera_sub_stream", "error"); // значение по умолчанию
+	config.showingFrames = configJson.value("showing_frames", false);
+	config.thresholdValue = configJson.value("threshold_value", 0.15);
+	config.firstCameraMainStream = configJson.value("first_camera_main_stream", "error");
+	config.firstCameraSubStream = configJson.value("first_camera_sub_stream", "error");
+	config.secondCameraMainStream = configJson.value("second_camera_main_stream", "error");
+	config.secondCameraSubStream = configJson.value("second_camera_sub_stream", "error");
 
 	return config;
 }
 
 
 // Function for a thread that captures frames from a single camera
-void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry: true - entry camera, false - exit camera
+void captureFromCamera(const std::string& cameraUrl, double thresholdValue, bool isEntry) { // isEntry: true - entry camera, false - exit camera
 	cv::VideoCapture cap(cameraUrl, cv::CAP_FFMPEG);
 	//cv::VideoCapture cap(0);
 	cv::Mat frame, croppedFrame, prevFrame, diffFrame, grayFrame;
@@ -102,8 +104,13 @@ void captureFromCamera(const std::string& cameraUrl, bool isEntry) { // isEntry:
 		// Display the result
 		//cv::imshow("Camera: " + cameraType, croppedFrame);
 
+		// Calculate percentage of difference
+		int totalPixels = diffFrame.rows * diffFrame.cols;
+		int motionPixels = cv::countNonZero(diffFrame);
+		double differencePercentage = (static_cast<double>(motionPixels) / totalPixels) * 100.0;
+
 		// Check if there is any motion
-		if (cv::countNonZero(diffFrame) > 0) {
+		if (differencePercentage > thresholdValue) {
 			// Save the original frame to disk
 			counter = getLastFrameNumber(COLLECTED_DIR, filenamePart);
 			filename = COLLECTED_DIR + filenamePart + "_" + to_string(++counter) + ".jpg";
@@ -161,20 +168,24 @@ int main() {
 
 	Config config = loadConfig("config.json");
 
-	// Creating two threads for each camera
-	thread camera1Thread(captureFromCamera, config.firstCameraMainStream, true);		// entry camera
-	thread camera1DisplayThread(displayFromCamera, config.firstCameraSubStream, true);
-	thread camera2Thread(captureFromCamera, config.secondCameraMainStream, false);		// exit camera
-	thread camera2DisplayThread(displayFromCamera, config.secondCameraSubStream, false);
+	// Creating thread for each camera
+	thread camera1Thread(captureFromCamera, config.firstCameraMainStream, config.thresholdValue, true);	// entry camera
+	thread camera2Thread(captureFromCamera, config.secondCameraMainStream, config.thresholdValue, false);// exit camera
 
 	// Creating thread for processing collected frames
 	thread processingFramesThread(processCollectedPictures);
 
+	// Check whether frames should be displayed on the screen
+	if (config.showingFrames) {
+		thread camera1DisplayThread(displayFromCamera, config.firstCameraSubStream, true);
+		thread camera2DisplayThread(displayFromCamera, config.secondCameraSubStream, false);
+		camera1DisplayThread.join();
+		camera2DisplayThread.join();
+	}
+
 	// Waiting for threads to complete
 	camera1Thread.join();
-	camera1DisplayThread.join();
 	camera2Thread.join();
-	camera2DisplayThread.join();
 	processingFramesThread.join();
 
 	return 0;

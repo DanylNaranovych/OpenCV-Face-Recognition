@@ -67,6 +67,8 @@ using anet_type = loss_metric<fc_no_bias<128, avg_pool_everything<
 	>>>>>>>>>>>>;
 
 struct Config {
+	bool showingFrames;
+	double thresholdValue;
 	string firstCameraMainStream;
 	string firstCameraSubStream;
 	string secondCameraMainStream;
