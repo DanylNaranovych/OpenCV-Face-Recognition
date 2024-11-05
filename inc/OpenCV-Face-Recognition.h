@@ -31,7 +31,7 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 // Path to project, folders and db
-extern string PROJECT_DIR, COLLECTED_DIR, IDENTIFIED_DIR, UNIDENTIFIED_DIR, DB_DIR;
+extern string PROJECT_DIR, COLLECTED_ENTRY_DIR, COLLECTED_EXIT_DIR, IDENTIFIED_DIR, UNIDENTIFIED_DIR, DB_DIR;
 
 // Global variables for storing the previous descriptor and name
 extern matrix<float, 0, 1> lastFaceDescriptor;

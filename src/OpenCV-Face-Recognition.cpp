@@ -4,7 +4,7 @@
 matrix<float, 0, 1> lastFaceDescriptor;
 string lastPersonName;
 
-string PROJECT_DIR, COLLECTED_DIR, IDENTIFIED_DIR, UNIDENTIFIED_DIR, DB_DIR;
+string PROJECT_DIR, COLLECTED_ENTRY_DIR, COLLECTED_EXIT_DIR, IDENTIFIED_DIR, UNIDENTIFIED_DIR, DB_DIR;
 
 // Function for setting paths
 void setPaths() {
@@ -24,7 +24,8 @@ void setPaths() {
 		currentPath += "/";
 
 		PROJECT_DIR = currentPath;
-		COLLECTED_DIR = currentPath + "collectedPictures/";
+		COLLECTED_ENTRY_DIR = currentPath + "collectedEntryPictures/";
+		COLLECTED_EXIT_DIR = currentPath + "collectedExitPictures/";
 		IDENTIFIED_DIR = currentPath + "identifiedPeople/";
 		UNIDENTIFIED_DIR = currentPath + "unidentifiedPeople/";
 		DB_DIR = currentPath + "records.db";
@@ -66,7 +67,7 @@ void captureFromCamera(const std::string& cameraUrl, double thresholdValue, bool
 
 	filenamePart = isEntry ? "motion_detected_frame_entry" : "motion_detected_frame_exit";
 	cameraType = isEntry ? "entry" : "exit";
-	short int counter = getLastFrameNumber(COLLECTED_DIR, filenamePart);
+	short int counter = getLastFrameNumber(isEntry ? COLLECTED_ENTRY_DIR : COLLECTED_EXIT_DIR, filenamePart);
 
 	// Check for a camera
 	if (!cap.isOpened()) {
@@ -112,8 +113,8 @@ void captureFromCamera(const std::string& cameraUrl, double thresholdValue, bool
 		// Check if there is any motion
 		if (differencePercentage > thresholdValue) {
 			// Save the original frame to disk
-			counter = getLastFrameNumber(COLLECTED_DIR, filenamePart);
-			filename = COLLECTED_DIR + filenamePart + "_" + to_string(++counter) + ".jpg";
+			counter = getLastFrameNumber(isEntry ? COLLECTED_ENTRY_DIR : COLLECTED_EXIT_DIR, filenamePart);
+			filename = isEntry ? COLLECTED_ENTRY_DIR : COLLECTED_EXIT_DIR + filenamePart + "_" + to_string(++counter) + ".jpg";
 			cv::imwrite(filename, croppedFrame);
 		}
 

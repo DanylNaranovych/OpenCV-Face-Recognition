@@ -47,15 +47,15 @@ void processCollectedPictures() {
 		}
 
 		if (timer.elapsed() > 5) {
-			collectedIndexEntry = getLastFrameNumber(COLLECTED_DIR, "motion_detected_frame_entry");
-			collectedIndexExit = getLastFrameNumber(COLLECTED_DIR, "motion_detected_frame_exit");
+			collectedIndexEntry = getLastFrameNumber(COLLECTED_ENTRY_DIR, "motion_detected_frame_entry");
+			collectedIndexExit = getLastFrameNumber(COLLECTED_EXIT_DIR, "motion_detected_frame_exit");
 
 			if (collectedIndexEntry >= 0) {
-				filePath = COLLECTED_DIR + string("motion_detected_frame_entry_" + to_string(collectedIndexEntry) + ".jpg");
+				filePath = COLLECTED_ENTRY_DIR + string("motion_detected_frame_entry_" + to_string(collectedIndexEntry) + ".jpg");
 				isEntry = true;
 			}
 			else if (collectedIndexExit >= 0) {
-				filePath = COLLECTED_DIR + string("motion_detected_frame_exit_" + to_string(collectedIndexExit) + ".jpg");
+				filePath = COLLECTED_EXIT_DIR + string("motion_detected_frame_exit_" + to_string(collectedIndexExit) + ".jpg");
 				isEntry = false;
 			}
 			else {
