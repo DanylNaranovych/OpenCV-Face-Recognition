@@ -10,10 +10,11 @@ if (POLICY CMP0141)
 endif ()
 
 set (CMAKE_TOOLCHAIN_FILE "D:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-set (OpenCV_DIR "${VCPKG_INSTALLED_DIR}/x64-windows/share/opencv4")
+# set (OpenCV_DIR "${VCPKG_INSTALLED_DIR}/x64-windows/share/opencv4")
 
 project ("OpenCV-Face-Recognition")
 
+find_package (SQLite3 REQUIRED)
 find_package (CUDA REQUIRED)
 find_package (OpenCV REQUIRED)
 find_package (dlib CONFIG REQUIRED)
@@ -38,7 +39,10 @@ file(GLOB_RECURSE HEADER_FILES ${CMAKE_SOURCE_DIR}/inc/*.h)
 
 # Добавьте источник в исполняемый файл этого проекта.
 add_executable ("OpenCV-Face-Recognition" ${HEADER_FILES} ${SRC_FILES})
-target_link_libraries ("OpenCV-Face-Recognition" PRIVATE ${CUDA_LIBS} ${OpenCV_LIBS} dlib::dlib ${SQLITE_MODERN_CPP_INCLUDE_DIRS} nlohmann_json::nlohmann_json)
+target_link_libraries ("OpenCV-Face-Recognition" PRIVATE SQLite::SQLite3)
+target_link_libraries ("OpenCV-Face-Recognition" PRIVATE ${SQLITE_MODERN_CPP_INCLUDE_DIRS})
+target_link_libraries ("OpenCV-Face-Recognition" PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries ("OpenCV-Face-Recognition" PRIVATE ${CUDA_LIBS} ${OpenCV_LIBS} dlib::dlib)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property (TARGET OpenCV-Face-Recognition PROPERTY CXX_STANDARD 20)

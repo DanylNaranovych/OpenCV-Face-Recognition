@@ -1,5 +1,5 @@
 {
-    "showing_frames": true,
+    "showing_frames": false,
     "threshold_value": 0.15,
     "first_camera_main_stream": "rtsp://admin:YT1771Q1@192.168.1.131/Preview_01_main",
     "first_camera_sub_stream": "rtsp://admin:YT1771Q1@192.168.1.131/Preview_01_sub",

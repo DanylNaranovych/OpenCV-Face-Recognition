@@ -8,12 +8,15 @@
 #include <regex>
 #include <chrono>
 #include <thread>
+#include <string>
+#include <algorithm>
 #include <sqlite_modern_cpp.h>
 #include <cuda_runtime.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/cuda.hpp>
 #include <opencv2/cudaimgproc.hpp>
 #include <opencv2/cudaarithm.hpp>
+#include <opencv2/dnn.hpp>
 #include <dlib/opencv/cv_image.h>
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing/render_face_detections.h>
@@ -100,7 +103,7 @@ private:
 // Getting last frame index in folder
 int getLastFrameNumber(const string& directoryPath, const string& patternPart);
 // Analyzing collected frames and making db notes
-void processCollectedPictures();
+void processCollectedPictures(bool isEntry);
 
 // Function for wriring logs
 void addLog(const string& text);

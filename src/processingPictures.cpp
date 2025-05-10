@@ -1,5 +1,10 @@
 #include "../inc/OpenCV-Face-Recognition.h"
 
+cv::Mat sharpeningKernel = (cv::Mat_<float>(3, 3) <<
+	0, -1, 0,
+	-1, 5, -1,
+	0, -1, 0);
+
 std::string getFileCreationTime(const string& filePath) {
 	// Get the time of the last modification of the file
 	auto ftime = fs::last_write_time(filePath);
@@ -20,12 +25,12 @@ std::string getFileCreationTime(const string& filePath) {
 	return ss.str();
 }
 
-void processCollectedPictures() {
-	bool isEntry = false, knownPerson = false;
-	short int index, collectedIndexEntry, collectedIndexExit;
+void processCollectedPictures(bool isEntry) {
+	bool knownPerson = false;
+	short int index, collectedIndex;
 	size_t identifiedPersonNameSize;
 	string personName, identifiedPersonName, filePath;
-	cv::Mat img, knownImg;
+	cv::Mat img, knownImg, grayFace, sharpenedFace, filteredFace, enhancedFace;
 	matrix<rgb_pixel> face_chip;
 	Timer timer;
 
@@ -37,31 +42,40 @@ void processCollectedPictures() {
 	deserialize(pose_model_path) >> pose_model;
 	deserialize(face_recognizer_path) >> face_recognizer;
 
-	cout << "Processing of collected frames has started" << endl;
+	cout << "Processing of " << (isEntry ? "entry" : "exit") << " collected frames has started" << endl;
 
 	while (true) {
 		// Press esc to close the program
 		if (GetAsyncKeyState(VK_ESCAPE)) {
-			cout << "End processing of collected frames loop" << endl;
+			cout << "End processing of " << (isEntry ? "entry" : "exit") << " collected frames loop" << endl;
 			return;
 		}
 
 		if (timer.elapsed() > 5) {
-			collectedIndexEntry = getLastFrameNumber(COLLECTED_ENTRY_DIR, "motion_detected_frame_entry");
-			collectedIndexExit = getLastFrameNumber(COLLECTED_EXIT_DIR, "motion_detected_frame_exit");
 
-			if (collectedIndexEntry >= 0) {
-				filePath = COLLECTED_ENTRY_DIR + string("motion_detected_frame_entry_" + to_string(collectedIndexEntry) + ".jpg");
-				isEntry = true;
+			if (isEntry) {
+				collectedIndex = getLastFrameNumber(COLLECTED_ENTRY_DIR, "motion_detected_frame_entry");
+
+				if (collectedIndex >= 0) {
+					filePath = COLLECTED_ENTRY_DIR + string("motion_detected_frame_entry_" + to_string(collectedIndex) + ".jpg");
+				}
+				else {
+					cout << "No frames from entry camera detected. Wait 5 second before another check" << endl;
+					timer.reset();
+					continue;
+				}
 			}
-			else if (collectedIndexExit >= 0) {
-				filePath = COLLECTED_EXIT_DIR + string("motion_detected_frame_exit_" + to_string(collectedIndexExit) + ".jpg");
-				isEntry = false;
-			}
-			else {
-				cout << "No frames detected. Wait 5 second before another check" << endl;
-				timer.reset();
-				continue;
+			else if (!isEntry) {
+				collectedIndex = getLastFrameNumber(COLLECTED_EXIT_DIR, "motion_detected_frame_exit");
+
+				if (collectedIndex >= 0) {
+					filePath = COLLECTED_EXIT_DIR + string("motion_detected_frame_exit_" + to_string(collectedIndex) + ".jpg");
+				}
+				else {
+					cout << "No frames from exit camera detected. Wait 5 second before another check" << endl;
+					timer.reset();
+					continue;
+				}
 			}
 		}
 		else {
@@ -87,6 +101,12 @@ void processCollectedPictures() {
 
 				// Retrieve the descriptor for the face in the current image
 				full_object_detection shape = pose_model(cimg, face);
+
+				// If the model could not find 68 points correctly, we ignore this face
+				if (shape.num_parts() != 68) {
+					continue;
+				}
+
 				extract_image_chip(cimg, get_face_chip_details(shape, 150, 0.25), face_chip);
 				matrix<float, 0, 1> faceDescriptor = face_recognizer(face_chip);
 
@@ -156,8 +176,20 @@ void processCollectedPictures() {
 					cv::Rect expandedFaceRect(x, y, width, height);
 					cv::Mat croppedFace = img(expandedFaceRect).clone();
 
+					cv::cvtColor(croppedFace, croppedFace, cv::COLOR_BGR2GRAY);
+
+					// Noise removal using OpenCV Denoise functions
+					cv::fastNlMeansDenoising(croppedFace, filteredFace, 3, 7, 21);
+
+					// Contrast enhancement with CLAHE
+					cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(4.0);
+					clahe->apply(filteredFace, enhancedFace);
+
+					// Applying a sharpening filter
+					cv::filter2D(enhancedFace, sharpenedFace, -1, sharpeningKernel);
+
 					// Saving a cropped face image
-					cv::imwrite(destination, croppedFace);
+					cv::imwrite(destination, sharpenedFace);
 				}
 			}
 		}

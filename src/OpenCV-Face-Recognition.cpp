@@ -90,7 +90,6 @@ void captureFromCamera(const std::string& cameraUrl, double thresholdValue, bool
 	// Basic processing cycle
 	while (true) {
 		cap >> frame;
-		cv::cvtColor(frame, grayFrame, cv::COLOR_BGR2GRAY);
 
 		// Crop the left third of the frame
 		croppedFrame = frame(cropRect);
@@ -102,9 +101,6 @@ void captureFromCamera(const std::string& cameraUrl, double thresholdValue, bool
 		// Threshold the difference to get the motion areas
 		cv::threshold(diffFrame, diffFrame, 70, 255, cv::THRESH_BINARY);
 
-		// Display the result
-		//cv::imshow("Camera: " + cameraType, croppedFrame);
-
 		// Calculate percentage of difference
 		int totalPixels = diffFrame.rows * diffFrame.cols;
 		int motionPixels = cv::countNonZero(diffFrame);
@@ -114,8 +110,8 @@ void captureFromCamera(const std::string& cameraUrl, double thresholdValue, bool
 		if (differencePercentage > thresholdValue) {
 			// Save the original frame to disk
 			counter = getLastFrameNumber(isEntry ? COLLECTED_ENTRY_DIR : COLLECTED_EXIT_DIR, filenamePart);
-			filename = isEntry ? COLLECTED_ENTRY_DIR : COLLECTED_EXIT_DIR + filenamePart + "_" + to_string(++counter) + ".jpg";
-			cv::imwrite(filename, croppedFrame);
+			filename = (isEntry ? COLLECTED_ENTRY_DIR : COLLECTED_EXIT_DIR) + filenamePart + "_" + to_string(++counter) + ".jpg";
+			cv::imwrite(filename, grayFrame);
 		}
 
 		// Update the previous frame
@@ -174,7 +170,8 @@ int main() {
 	thread camera2Thread(captureFromCamera, config.secondCameraMainStream, config.thresholdValue, false);// exit camera
 
 	// Creating thread for processing collected frames
-	thread processingFramesThread(processCollectedPictures);
+	thread processingEntryFramesThread(processCollectedPictures, true);
+	thread processingExitFramesThread(processCollectedPictures, false);
 
 	// Check whether frames should be displayed on the screen
 	if (config.showingFrames) {
@@ -187,7 +184,8 @@ int main() {
 	// Waiting for threads to complete
 	camera1Thread.join();
 	camera2Thread.join();
-	processingFramesThread.join();
+	processingEntryFramesThread.join();
+	processingExitFramesThread.join();
 
 	return 0;
 }

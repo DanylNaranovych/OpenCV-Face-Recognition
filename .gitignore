@@ -374,3 +374,6 @@ unidentifiedPeople/
 
 # Database files for sqlite3
 *.db
+
+# Zip file of project
+*.zip
